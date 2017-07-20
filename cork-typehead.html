@@ -1,0 +1,217 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../cork-icons/cork-icons.html">
+
+<dom-module id="cork-typehead">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+      }
+      
+      #triangle {
+        z-index: 1001;
+        position: absolute;
+        left: 5px;
+        top: -15px;
+      }
+
+      #anchor {
+        position: relative;
+      }
+      
+      #popup {
+        z-index: 1000;
+        background-color: var(--cork-popup-background-color, var(--primary-background-color, #fff));
+        box-shadow: 0 0 8px #666;
+        position: absolute;
+        top: 17px;
+        left: 0;
+        width: var(--cork-popup-width);
+        min-width: 290px;
+      }
+
+      .option {
+        cursor: pointer;
+        padding: 8px 13px;
+        border-bottom: 1px solid var(--medium-background-color);
+      }
+
+      .option:hover {
+        background-color: var(--light-background-color);
+        color: var(--default-primary-color);
+      }
+
+      .prefix {
+        font-weight: bold;
+      }
+
+      .completion {
+        color: var(--default-primary-color);
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    
+    <div>
+      <slot></slot>
+    </div>
+
+    <div id="anchor" hidden$="[[!open]]" on-click="_prevent">
+      <iron-icon icon="cork:up-arrow" id="triangle" style="--iron-icon-height: 32px;
+    --iron-icon-width: 32px;"></iron-icon>
+      <div id="popup">
+        <template is="dom-repeat" items="[[options]]">
+          <div class="option" on-click="_select" index$="[[index]]">
+            <span class="prefix">[[item.prefix]]</span><span class="completion">[[item.completion]]</span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+  </template>
+
+  <script>
+    /**
+     * `cork-typehead`
+     * Wraps a input element with typeahead popup
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class CorkTypehead extends Polymer.Element {
+      static get is() { return 'cork-typehead'; }
+
+      static get properties() {
+        return {
+          open: {
+            type: Boolean,
+            value: false
+          },
+          options : {
+            type : Array,
+            value : function() {
+              return [];
+            }
+          },
+
+          // ms to delay search
+          delay : {
+            type : Number,
+            value : 100
+          },
+
+          searchId : {
+            type : Number,
+            value : 0
+          }
+        };
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        window.addEventListener('click', this.hide);
+        this._bind();
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        window.removeEventListener('click', this.hide);
+      }
+
+      _bind() {
+        this.input = this.children[0];
+        this.input.addEventListener('keyup', this._onKeyUp.bind(this));
+      }
+
+      _prevent(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      // override me
+      search(value) {
+        return new Promise((resolve, reject) => {
+          resolve(['Not setup']);
+        });
+      }
+
+      _searchAsync(value) {
+        this._searchDebounce = Polymer.Debouncer.debounce(
+          this._searchDebounce,
+          Polymer.Async.timeOut.after(this.delay),
+          () => {
+            this.searchId++;
+            var id = this.searchId;
+
+            this.search(value)
+              .then((results) => {
+                if( this.searchId !== id ) return;
+                this._renderResults(value, results)
+              })
+              .catch((e) => console.error(e)); 
+          }
+        );
+      }
+
+      _onKeyUp() {
+        if( !this.input.value ) {
+          return this.hide();
+        }
+        this._searchAsync(this.input.value);
+      }
+
+      _renderResults(val, results) {
+        if( results.length === 0 ) {
+          return this.hide();
+        }
+
+        this.show();
+        var re = new RegExp('^'+val, 'i');
+
+        this.results = results;
+        this.options = results.map((result) => {
+          var parts = result.split(re);
+          console.log(parts);
+          var completion = '';
+          
+          if( parts.length > 1 ) {
+            completion = parts[1];
+          }
+
+          return {
+            prefix : val,
+            completion : completion
+          }
+        });
+        console.log(this.options);
+      }
+
+      _select(e) {
+        var index = parseInt(e.currentTarget.getAttribute('index'));
+        var payload = {
+          detail: {
+            value: this.results[index]
+          }
+        }
+
+        this.dispatchEvent(new CustomEvent('select', payload));
+        this.hide();
+      }
+
+      hide() {
+        this.open = false;
+      }
+
+      show() {
+        this.open = true;
+      }
+
+    }
+
+    window.customElements.define(CorkTypehead.is, CorkTypehead);
+  </script>
+</dom-module>
