@@ -111,6 +111,11 @@
         };
       }
 
+      constructor() {
+        super();
+        this.hide = this.hide.bind(this);
+      }
+
       connectedCallback() {
         super.connectedCallback();
         window.addEventListener('click', this.hide);
