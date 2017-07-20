@@ -1,7 +1,7 @@
 {
-  "name": "cork-typehead",
+  "name": "cork-typeahead",
   "description": "Wraps a input element with typeahead popup",
-  "main": "cork-typehead.html",
+  "main": "cork-typeahead.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
     "cork-icons": "cork-elements/cork-icons",
