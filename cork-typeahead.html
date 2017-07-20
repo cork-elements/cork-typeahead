@@ -149,8 +149,14 @@
 
             this.search(value)
               .then((results) => {
+                var valueUsed;
+                if( !Array.isArray(results) ) {
+                  valueUsed = results.valueUsed;
+                  results = results.results;
+                }
+
                 if( this.searchId !== id ) return;
-                this._renderResults(value, results)
+                this._renderResults(valueUsed || value, results)
               })
               .catch((e) => console.error(e)); 
           }
@@ -175,19 +181,19 @@
         this.results = results;
         this.options = results.map((result) => {
           var parts = result.split(re);
-          console.log(parts);
-          var completion = '';
           
           if( parts.length > 1 ) {
-            completion = parts[1];
+            return {
+              prefix : val,
+              completion : parts[1]
+            }
           }
 
           return {
-            prefix : val,
-            completion : completion
+            prefix : '',
+            completion : result
           }
         });
-        console.log(this.options);
       }
 
       _select(e) {
