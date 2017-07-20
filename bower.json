@@ -1,5 +1,5 @@
 {
-  "name": "cork-typehead",
+  "name": "cork-typeahead",
   "description": "Wraps a input element with typeahead popup",
   "main": "cork-typeahead.html",
   "dependencies": {
