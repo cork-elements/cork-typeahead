@@ -37,7 +37,7 @@
         border-bottom: 1px solid var(--medium-background-color);
       }
 
-      .option:hover {
+      .option:hover, .option[selected] {
         background-color: var(--light-background-color);
         color: var(--default-primary-color);
       }
@@ -64,7 +64,7 @@
     --iron-icon-width: 32px;"></iron-icon>
       <div id="popup">
         <template is="dom-repeat" items="[[options]]">
-          <div class="option" on-click="_select" index$="[[index]]">
+          <div class="option" selected$="[[item.selected]]" on-click="_onOptionClick" index$="[[index]]">
             <span class="prefix">[[item.prefix]]</span><span class="completion">[[item.completion]]</span>
           </div>
         </template>
@@ -107,6 +107,11 @@
           searchId : {
             type : Number,
             value : 0
+          },
+
+          selectedIndex : {
+            type : Number,
+            value : 0
           }
         };
       }
@@ -125,6 +130,31 @@
       disconnectedCallback() {
         super.disconnectedCallback();
         window.removeEventListener('click', this.hide);
+      }
+
+      _selectOption() {
+        var arr = [];
+        for( var i = 0; i < this.options.length; i++ ) {
+          arr.push(Object.assign({}, this.options[i], {selected: (i === this.selectedIndex)}));
+        }
+        this.options = arr;
+        console.log(this.options);
+      }
+
+      _selectUp() {
+        this.selectedIndex--;
+        if( this.selectedIndex < 0 ) {
+          this.selectedIndex = this.options.length - 1;
+        }
+        this._selectOption();
+      }
+
+      _selectDown() {
+        this.selectedIndex++;
+        if( this.selectedIndex === this.options.length ) {
+          this.selectedIndex = 0;
+        }
+        this._selectOption();
       }
 
       _bind() {
@@ -168,7 +198,21 @@
         );
       }
 
-      _onKeyUp() {
+      _onKeyUp(e) {
+        // enter
+        if( e.which === 13 ) {
+          this._select(this.selectedIndex);
+          return this._prevent(e);
+        // up arrow
+        } else if( e.which === 38 ) {
+          this._selectUp();
+          return this._prevent(e);
+        // tab or down arrow
+        } else if( e.which === 40 ) {
+          this._selectDown();
+          return this._prevent(e);
+        }
+
         if( !this.input.value ) {
           return this.hide();
         }
@@ -199,10 +243,21 @@
             completion : result
           }
         });
+
+        this.selectedIndex = 0;
+        if( this.options.length > 0 ) {
+          this.options[0].selected = true;
+        }
       }
 
-      _select(e) {
+      _onOptionClick(e) {
         var index = parseInt(e.currentTarget.getAttribute('index'));
+        this._select(index);
+      }
+
+      _select(index) {
+        if( this.results.length <= index ) return;
+
         var payload = {
           detail: {
             value: this.results[index]
