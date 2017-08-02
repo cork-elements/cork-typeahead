@@ -29,6 +29,8 @@
         left: 0;
         width: var(--cork-popup-width);
         min-width: 290px;
+        overflow: auto;
+        max-height: 150px;
       }
 
       .option {
@@ -137,6 +139,13 @@
         for( var i = 0; i < this.options.length; i++ ) {
           arr.push(Object.assign({}, this.options[i], {selected: (i === this.selectedIndex)}));
         }
+
+        var optEle = this.shadowRoot.querySelector('.option');
+        if( optEle ) {
+          var h = optEle.offsetHeight;
+          this.$.popup.scrollTop = (this.selectedIndex * h) - h;
+        }
+
         this.options = arr;
       }
 
