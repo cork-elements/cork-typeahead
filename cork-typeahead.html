@@ -114,6 +114,18 @@
           selectedIndex : {
             type : Number,
             value : 0
+          },
+
+          results : {
+            type : Array,
+            value : function() {
+              return [];
+            }
+          },
+
+          blurTimer : {
+            type : Number,
+            value : -1
           }
         };
       }
@@ -168,7 +180,9 @@
       _bind() {
         this.input = this.children[0];
         this.input.addEventListener('keyup', this._onKeyUp.bind(this));
-        this.input.addEventListener('blur', this.hide);
+        this.input.addEventListener('blur', () => {
+          this.blurTimer = setTimeout(() => this.hide(), 150);
+        });
       }
 
       _prevent(e) {
@@ -260,6 +274,11 @@
       }
 
       _onOptionClick(e) {
+        if( this.blurTimer !== -1 ) {
+          clearTimeout(this.blurTimer);
+          this.blurTimer = -1;
+        }
+
         var index = parseInt(e.currentTarget.getAttribute('index'));
         this._select(index);
       }
