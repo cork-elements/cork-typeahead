@@ -168,6 +168,7 @@
       _bind() {
         this.input = this.children[0];
         this.input.addEventListener('keyup', this._onKeyUp.bind(this));
+        this.input.addEventListener('blur', this.hide);
       }
 
       _prevent(e) {
