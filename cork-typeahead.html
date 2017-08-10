@@ -14,6 +14,8 @@
         position: absolute;
         left: 5px;
         top: -14px;
+        --iron-icon-height: 32px;
+        --iron-icon-width: 32px;
       }
 
       #anchor {
@@ -62,8 +64,7 @@
     </div>
 
     <div id="anchor" hidden$="[[!open]]" on-click="_prevent">
-      <iron-icon icon="cork:up-arrow" id="triangle" style="--iron-icon-height: 32px;
-    --iron-icon-width: 32px;"></iron-icon>
+      <iron-icon icon="cork:up-arrow" id="triangle"></iron-icon>
       <div id="popup">
         <template is="dom-repeat" items="[[options]]">
           <div class="option" selected$="[[item.selected]]" on-click="_onOptionClick" index$="[[index]]">
