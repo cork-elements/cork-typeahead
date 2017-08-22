@@ -114,7 +114,7 @@
 
           selectedIndex : {
             type : Number,
-            value : 0
+            value : -1
           },
 
           results : {
@@ -235,6 +235,9 @@
         } else if( e.which === 40 ) {
           this._selectDown();
           return this._prevent(e);
+        // hide
+        } else if ( e.which === 27 ) {
+          return this.hide();
         }
 
         if( !this.input.value ) {
@@ -258,20 +261,22 @@
           if( parts.length > 1 ) {
             return {
               prefix : val,
-              completion : parts[1]
+              completion : parts[1],
+              selected : false
             }
           }
 
           return {
             prefix : '',
-            completion : result
+            completion : result,
+            selected : false
           }
         });
 
-        this.selectedIndex = 0;
-        if( this.options.length > 0 ) {
-          this.options[0].selected = true;
-        }
+        this.selectedIndex = -1;
+        // if( this.options.length > 0 ) {
+        //   this.options[0].selected = true;
+        // }
       }
 
       _onOptionClick(e) {
@@ -285,7 +290,7 @@
       }
 
       _select(index) {
-        if( this.results.length <= index ) return;
+        if( this.results.length <= index || index < 0 ) return;
 
         var payload = {
           detail: {

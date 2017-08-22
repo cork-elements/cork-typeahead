@@ -48,6 +48,9 @@
           resolve(results);
         });
       }
+      ele.addEventListener('select', (e) => {
+        document.querySelector('input').value = e.detail.value;
+      });
 
       var states = {
     "AL": "Alabama",
