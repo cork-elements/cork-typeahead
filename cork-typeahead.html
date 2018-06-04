@@ -1,317 +1,69 @@
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../iron-icon/iron-icon.html">
-<link rel="import" href="../cork-icons/cork-icons.html">
+<style>
+  :host {
+    display: inline-block;
+  }
+  
+  #triangle {
+    z-index: 1001;
+    position: absolute;
+    left: 5px;
+    top: -14px;
+    --iron-icon-height: 32px;
+    --iron-icon-width: 32px;
+  }
 
-<dom-module id="cork-typeahead">
-  <template>
-    <style>
-      :host {
-        display: inline-block;
-      }
-      
-      #triangle {
-        z-index: 1001;
-        position: absolute;
-        left: 5px;
-        top: -14px;
-        --iron-icon-height: 32px;
-        --iron-icon-width: 32px;
-      }
+  #anchor {
+    position: relative;
+  }
+  
+  #popup {
+    z-index: 1000;
+    background-color: var(--cork-popup-background-color, var(--primary-background-color, #fff));
+    box-shadow: 0 0 8px #666;
+    position: absolute;
+    top: 17px;
+    left: 0;
+    width: var(--cork-popup-width);
+    min-width: 290px;
+    overflow: auto;
+    max-height: 150px;
+  }
 
-      #anchor {
-        position: relative;
-      }
-      
-      #popup {
-        z-index: 1000;
-        background-color: var(--cork-popup-background-color, var(--primary-background-color, #fff));
-        box-shadow: 0 0 8px #666;
-        position: absolute;
-        top: 17px;
-        left: 0;
-        width: var(--cork-popup-width);
-        min-width: 290px;
-        overflow: auto;
-        max-height: 150px;
-      }
+  .option {
+    cursor: pointer;
+    padding: 8px 13px;
+    border-bottom: 1px solid var(--medium-background-color);
+  }
 
-      .option {
-        cursor: pointer;
-        padding: 8px 13px;
-        border-bottom: 1px solid var(--medium-background-color);
-      }
+  .option:hover, .option[selected] {
+    background-color: var(--light-background-color);
+    color: var(--default-primary-color);
+  }
 
-      .option:hover, .option[selected] {
-        background-color: var(--light-background-color);
-        color: var(--default-primary-color);
-      }
+  .prefix {
+    font-weight: bold;
+  }
 
-      .prefix {
-        font-weight: bold;
-      }
+  .completion {
+    color: var(--cork-completion-color,  var(--accent-color));
+  }
 
-      .completion {
-        color: var(--cork-completion-color,  var(--accent-color));
-      }
+  [hidden] {
+    display: none !important;
+  }
+</style>
 
-      [hidden] {
-        display: none !important;
-      }
-    </style>
-    
-    <div>
-      <slot></slot>
-    </div>
+<div>
+  <slot></slot>
+</div>
 
-    <div id="anchor" hidden$="[[!open]]" on-click="_prevent">
-      <iron-icon icon="cork:up-arrow" id="triangle"></iron-icon>
-      <div id="popup">
-        <template is="dom-repeat" items="[[options]]">
-          <div class="option" selected$="[[item.selected]]" on-click="_onOptionClick" index$="[[index]]">
-            <span class="prefix">[[item.prefix]]</span><span class="completion">[[item.completion]]</span>
-          </div>
-        </template>
+<div id="anchor" hidden$="[[!open]]" on-click="_prevent">
+  <iron-icon icon="cork:up-arrow" id="triangle"></iron-icon>
+  <div id="popup">
+    <template is="dom-repeat" items="[[options]]">
+      <div class="option" selected$="[[item.selected]]" on-click="_onOptionClick" index$="[[index]]">
+        <span class="prefix">[[item.prefix]]</span><span class="completion">[[item.completion]]</span>
       </div>
-    </div>
-
-  </template>
-
-  <script>
-    /**
-     * `cork-typehead`
-     * Wraps a input element with typeahead popup
-     *
-     * @customElement
-     * @polymer
-     * @demo demo/index.html
-     */
-    class CorkTypeahead extends Polymer.Element {
-      static get is() { return 'cork-typeahead'; }
-
-      static get properties() {
-        return {
-          open: {
-            type: Boolean,
-            value: false
-          },
-          options : {
-            type : Array,
-            value : function() {
-              return [];
-            }
-          },
-
-          // ms to delay search
-          delay : {
-            type : Number,
-            value : 100
-          },
-
-          searchId : {
-            type : Number,
-            value : 0
-          },
-
-          selectedIndex : {
-            type : Number,
-            value : -1
-          },
-
-          results : {
-            type : Array,
-            value : function() {
-              return [];
-            }
-          },
-
-          blurTimer : {
-            type : Number,
-            value : -1
-          }
-        };
-      }
-
-      constructor() {
-        super();
-        this.hide = this.hide.bind(this);
-      }
-
-      connectedCallback() {
-        super.connectedCallback();
-        window.addEventListener('click', this.hide);
-        this._bind();
-      }
-
-      disconnectedCallback() {
-        super.disconnectedCallback();
-        window.removeEventListener('click', this.hide);
-      }
-
-      _selectOption() {
-        var arr = [];
-        for( var i = 0; i < this.options.length; i++ ) {
-          arr.push(Object.assign({}, this.options[i], {selected: (i === this.selectedIndex)}));
-        }
-
-        var optEle = this.shadowRoot.querySelector('.option');
-        if( optEle ) {
-          var h = optEle.offsetHeight;
-          this.$.popup.scrollTop = (this.selectedIndex * h) - h;
-        }
-
-        this.options = arr;
-      }
-
-      _selectUp() {
-        this.selectedIndex--;
-        if( this.selectedIndex < 0 ) {
-          this.selectedIndex = this.options.length - 1;
-        }
-        this._selectOption();
-      }
-
-      _selectDown() {
-        this.selectedIndex++;
-        if( this.selectedIndex === this.options.length ) {
-          this.selectedIndex = 0;
-        }
-        this._selectOption();
-      }
-
-      _bind() {
-        this.input = this.children[0];
-        this.input.addEventListener('keyup', this._onKeyUp.bind(this));
-        this.input.addEventListener('blur', () => {
-          this.blurTimer = setTimeout(() => this.hide(), 150);
-        });
-      }
-
-      _prevent(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      // override me
-      search(value) {
-        return new Promise((resolve, reject) => {
-          resolve(['Not setup']);
-        });
-      }
-
-      _searchAsync(value) {
-        this._searchDebounce = Polymer.Debouncer.debounce(
-          this._searchDebounce,
-          Polymer.Async.timeOut.after(this.delay),
-          () => {
-            this.searchId++;
-            var id = this.searchId;
-
-            this.search(value)
-              .then((results) => {
-                var valueUsed;
-                if( !Array.isArray(results) ) {
-                  valueUsed = results.valueUsed;
-                  results = results.results;
-                }
-
-                if( this.searchId !== id ) return;
-                this._renderResults(valueUsed || value, results)
-              })
-              .catch((e) => console.error(e)); 
-          }
-        );
-      }
-
-      _onKeyUp(e) {
-        // enter
-        if( e.which === 13 ) {
-          this._select(this.selectedIndex);
-          return this._prevent(e);
-        // up arrow
-        } else if( e.which === 38 ) {
-          this._selectUp();
-          return this._prevent(e);
-        // tab or down arrow
-        } else if( e.which === 40 ) {
-          this._selectDown();
-          return this._prevent(e);
-        // hide
-        } else if ( e.which === 27 ) {
-          return this.hide();
-        }
-
-        if( !this.input.value ) {
-          return this.hide();
-        }
-        this._searchAsync(this.input.value);
-      }
-
-      _renderResults(val, results) {
-        if( results.length === 0 ) {
-          return this.hide();
-        }
-
-        this.show();
-        var re = new RegExp('^'+val, 'i');
-
-        this.results = results;
-        this.options = results.map((result) => {
-          var parts = result.split(re);
-          
-          if( parts.length > 1 ) {
-            return {
-              prefix : val,
-              completion : parts[1],
-              selected : false
-            }
-          }
-
-          return {
-            prefix : '',
-            completion : result,
-            selected : false
-          }
-        });
-
-        this.selectedIndex = -1;
-        // if( this.options.length > 0 ) {
-        //   this.options[0].selected = true;
-        // }
-      }
-
-      _onOptionClick(e) {
-        if( this.blurTimer !== -1 ) {
-          clearTimeout(this.blurTimer);
-          this.blurTimer = -1;
-        }
-
-        var index = parseInt(e.currentTarget.getAttribute('index'));
-        this._select(index);
-      }
-
-      _select(index) {
-        if( this.results.length <= index || index < 0 ) return;
-
-        var payload = {
-          detail: {
-            value: this.results[index]
-          }
-        }
-
-        this.dispatchEvent(new CustomEvent('select', payload));
-        this.hide();
-      }
-
-      hide() {
-        this.open = false;
-      }
-
-      show() {
-        this.open = true;
-      }
-
-    }
-
-    window.customElements.define(CorkTypeahead.is, CorkTypeahead);
-  </script>
-</dom-module>
+    </template>
+  </div>
+</div>

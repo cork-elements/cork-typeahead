@@ -1,0 +1,24 @@
+{
+  "name": "@ucd-lib/cork-typeahead",
+  "version": "1.0.0",
+  "description": "Wraps a input element with typeahead popup",
+  "main": "cork-typeahead.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cork-elements/cork-typeahead.git"
+  },
+  "author": "jrmerz@ucdavis.edu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cork-elements/cork-typeahead/issues"
+  },
+  "homepage": "https://github.com/cork-elements/cork-typeahead#readme",
+  "dependencies": {
+    "@polymer/iron-icon": "^3.0.0-pre.19",
+    "@polymer/polymer": "^3.0.2",
+    "@ucd-lib/cork-icons": "^1.0.0"
+  }
+}
